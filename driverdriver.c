@@ -121,7 +121,11 @@ static const char* get_pdn()
 #else
      compiler_name = "-g++-mp-"; 
 #endif
-     snprintf( pdn, 32, "%s%s.%s", compiler_name, GCC_VERSION_MAJOR, GCC_VERSION_MINOR );
+     if ( GCC_VERSION_MAJOR < 5 ) {
+         snprintf( pdn, 32, "%s%s.%s", compiler_name, GCC_VERSION_MAJOR, GCC_VERSION_MINOR );
+     } else {
+         snprintf( pdn, 32, "%s%s", compiler_name, GCC_VERSION_MAJOR );
+     }
      return pdn;
 }
 
