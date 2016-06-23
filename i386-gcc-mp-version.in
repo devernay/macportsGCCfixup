@@ -1,3 +1,3 @@
 #!/bin/sh
 
-/opt/local/bin/gcc-mp-@GCC_VERSION_MAJOR@.@GCC_VERSION_MINOR@ -m32 $@
+@GCC@-dd -m32 $@

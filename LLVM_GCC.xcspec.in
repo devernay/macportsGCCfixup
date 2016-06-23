@@ -8,7 +8,7 @@
     Name = "Mac Ports GCC @GCC_VERSION_MAJOR@.@GCC_VERSION_MINOR@";
     Version = "@GCC_VERSION_MAJOR@.@GCC_VERSION_MINOR@";
     Description = "Mac Ports GCC Compiler @GCC_VERSION_MAJOR@.@GCC_VERSION_MINOR@";
-    ExecPath = "/opt/local/bin/gcc-mp";      // This gets converted to the C++ variant automatically
+    ExecPath = "@GCC@-dd";      // This gets converted to the C++ variant automatically
     IsAbstract = NO;
     ShowInCompilerSelectionPopup = YES;
     IsNoLongerSupported = NO;
