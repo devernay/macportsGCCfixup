@@ -40,6 +40,7 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
    Pay the price for including darwin.h.  */
 typedef int tree;
 typedef int rtx;
+#undef GTY
 #define GTY(x) /* nothing */
 #define USED_FOR_TARGET 1
 /* Include darwin.h for SWITCH_TAKES_ARG and
@@ -121,11 +122,11 @@ static const char* get_pdn()
 #else
      compiler_name = "-g++-mp-"; 
 #endif
-     if ( GCC_VERSION_MAJOR < 5 ) {
-         snprintf( pdn, 32, "%s%s.%s", compiler_name, GCC_VERSION_MAJOR, GCC_VERSION_MINOR );
-     } else {
-         snprintf( pdn, 32, "%s%s", compiler_name, GCC_VERSION_MAJOR );
-     }
+#if GCC_VERSION_MAJOR < 5
+     snprintf( pdn, 32, "%s%d.%d", compiler_name, GCC_VERSION_MAJOR, GCC_VERSION_MINOR );
+#else
+     snprintf( pdn, 32, "%s%d", compiler_name, GCC_VERSION_MAJOR );
+#endif
      return pdn;
 }
 
