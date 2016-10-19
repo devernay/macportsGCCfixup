@@ -42,12 +42,40 @@ find_program ( GXX
 	       NAMES g++-mp-${GCC_VERSION_MAJOR}.${GCC_VERSION_MINOR} g++-mp-${GCC_VERSION_MAJOR} g++-${GCC_VERSION_MAJOR}.${GCC_VERSION_MINOR} g++-${GCC_VERSION_MAJOR}
 	       PATHS ${PORTS_PATH}/bin )
 
+execute_process (
+  COMMAND         ${GCC} -dumpmachine
+  OUTPUT_VARIABLE GCC_SYSTEM_NAME
+)
+
+execute_process (
+  COMMAND         ${GXX} -dumpmachine
+  OUTPUT_VARIABLE GXX_SYSTEM_NAME
+)
+
 get_filename_component(GCCNAME ${GCC} NAME)
 get_filename_component(GXXNAME ${GXX} NAME)
+get_filename_component(GCCDIR ${GCC} DIRECTORY)
+get_filename_component(GXXDIR ${GXX} DIRECTORY)
+
+find_program ( GCC_FULL
+	       NAMES ${GCC_SYSTEM_NAME}-${GCCNAME}
+	       PATHS ${GCCDIR} )
+
+find_program ( GXX_FULL
+	       NAMES ${GXX_SYSTEM_NAME}-${GXXNAME}
+	       PATHS ${GXXDIR} )
+
+get_filename_component(GCC_FULL_NAME ${GCC_FULL} NAME)
+get_filename_component(GXX_FULL_NAME ${GXX_FULL} NAME)
 
 if( NOT GCC )
      MESSAGE( FATAL_ERROR
               "Unable to find the macports version of GCC, please install it by running \"${PORTS_PATH}/bin/port install gcc${GCC_VERSION_MAJOR}${GCC_VERSION_MINOR} +universal\"." )
+endif()
+
+if( NOT GCC_FULL )
+     MESSAGE( FATAL_ERROR
+              "Unable to find the full gcc name." )
 endif()
 
 find_path( XCODE_PLUGIN_PATH GCC\ 4.2.xcplugin
@@ -59,12 +87,16 @@ if( NOT XCODE_PLUGIN_PATH )
      MESSAGE( "WARNING: Unable to find xcode xcplugin path, MacPorts GCC will not be integrated with Xcode.  Commandline multi arch builds will still be possible" )
 endif()
 
-ADD_EXECUTABLE( ${GCCNAME}-dd driverdriver.c )
-ADD_EXECUTABLE( ${GXXNAME}-dd driverdriver.c )
+ADD_EXECUTABLE( ${GCCNAME} driverdriver.c )
+ADD_EXECUTABLE( ${GXXNAME} driverdriver.c )
 
-SET_TARGET_PROPERTIES(  ${GCCNAME}-dd
+SET_TARGET_PROPERTIES(  ${GCCNAME}
                         PROPERTIES
-                        COMPILE_FLAGS "-DBUILD_C_COMPILER" )
+                        COMPILE_FLAGS "-DPDN='\"${GCC_FULL_NAME}\"'" )
+
+SET_TARGET_PROPERTIES(  ${GXXNAME}
+                        PROPERTIES
+                        COMPILE_FLAGS "-DPDN='\"${GXX_FULL_NAME}\"'" )
 
 find_path( DARWIN_H_INCLUDE_PATH darwin.h
            ${PORTS_PATH}/lib/gcc${GCC_VERSION_MAJOR}${GCC_VERSION_MINOR}/gcc/i386-apple-darwin${OSVERSION}/${GCC_VERSION_MAJOR}.${GCC_VERSION_MINOR}.${GCC_VERSION_MICRO}/plugin/include/config/i386/
@@ -108,13 +140,14 @@ else()
     MESSAGE( FATAL_ERROR "Unable to find libiberty.  Find libiberty.a in the gcc macports directory and add the path to the IBERTY_LIB search path list in CMakeLists.txt" )
 endif()
 
-TARGET_LINK_LIBRARIES( ${GCCNAME}-dd ${IBERTY_LIB} )
-TARGET_LINK_LIBRARIES( ${GXXNAME}-dd ${IBERTY_LIB} )
+TARGET_LINK_LIBRARIES( ${GCCNAME} ${IBERTY_LIB} )
+TARGET_LINK_LIBRARIES( ${GXXNAME} ${IBERTY_LIB} )
 
-CONFIGURE_FILE(${PROJECT_SOURCE_DIR}/i386-gcc-mp-version.in ${PROJECT_BINARY_DIR}/i386-${GCCNAME})
-CONFIGURE_FILE(${PROJECT_SOURCE_DIR}/i386-g++-mp-version.in ${PROJECT_BINARY_DIR}/i386-${GXXNAME})
-CONFIGURE_FILE(${PROJECT_SOURCE_DIR}/x86_64-gcc-mp-version.in ${PROJECT_BINARY_DIR}/x86_64-${GCCNAME})
-CONFIGURE_FILE(${PROJECT_SOURCE_DIR}/x86_64-g++-mp-version.in ${PROJECT_BINARY_DIR}/x86_64-${GXXNAME})
+# do not install these, they should be useless
+#CONFIGURE_FILE(${PROJECT_SOURCE_DIR}/i386-gcc-mp-version.in ${PROJECT_BINARY_DIR}/i386-${GCCNAME})
+#CONFIGURE_FILE(${PROJECT_SOURCE_DIR}/i386-g++-mp-version.in ${PROJECT_BINARY_DIR}/i386-${GXXNAME})
+#CONFIGURE_FILE(${PROJECT_SOURCE_DIR}/x86_64-gcc-mp-version.in ${PROJECT_BINARY_DIR}/x86_64-${GCCNAME})
+#CONFIGURE_FILE(${PROJECT_SOURCE_DIR}/x86_64-g++-mp-version.in ${PROJECT_BINARY_DIR}/x86_64-${GXXNAME})
 
 if( XCODE_PLUGIN_PATH )
     CONFIGURE_FILE(${PROJECT_SOURCE_DIR}/LLVM_GCC.xcspec.in ${PROJECT_BINARY_DIR}/LLVM\ GCC\ ${GCC_VERSION_MAJOR}.${GCC_VERSION_MINOR}.xcspec)
@@ -171,10 +204,12 @@ if( XCODE_PLUGIN_PATH )
             RENAME GCC\ ${GCC_VERSION_MAJOR}.${GCC_VERSION_MINOR}.strings)
 endif( XCODE_PLUGIN_PATH )
 
-INSTALL(FILES ${PROJECT_BINARY_DIR}/i386-${GCCNAME}
-              ${PROJECT_BINARY_DIR}/i386-${GXXNAME}
-              ${PROJECT_BINARY_DIR}/x86_64-${GCCNAME}
-              ${PROJECT_BINARY_DIR}/x86_64-${GXXNAME}
-        DESTINATION bin 
-        PERMISSIONS WORLD_READ WORLD_EXECUTE OWNER_WRITE OWNER_READ OWNER_EXECUTE GROUP_READ GROUP_EXECUTE)
-INSTALL(TARGETS ${GCCNAME}-dd ${GXXNAME}-dd DESTINATION bin)
+#INSTALL(FILES ${PROJECT_BINARY_DIR}/i386-${GCCNAME}
+#              ${PROJECT_BINARY_DIR}/i386-${GXXNAME}
+#              ${PROJECT_BINARY_DIR}/x86_64-${GCCNAME}
+#              ${PROJECT_BINARY_DIR}/x86_64-${GXXNAME}
+#        DESTINATION bin 
+#        PERMISSIONS WORLD_READ WORLD_EXECUTE OWNER_WRITE OWNER_READ OWNER_EXECUTE GROUP_READ GROUP_EXECUTE)
+
+# this will overwrite the gcc-mp-* executable
+INSTALL(TARGETS ${GCCNAME} ${GXXNAME} DESTINATION bin)
