@@ -29,7 +29,7 @@
         "com.apple.compilers.gcc.headers.4_2",
     );
     "BuiltinJambaseRuleName" = ProcessC;
-    ExecPath = "@GCC@-dd";
+    ExecPath = "@GCC@";
     CommandOutputParser = "XCGccCommandOutputParser";
     IsAbstract = YES;
     ShowInCompilerSelectionPopup = NO;
