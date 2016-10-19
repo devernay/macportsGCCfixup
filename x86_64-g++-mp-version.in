@@ -1,3 +1,0 @@
-#!/bin/sh
-
-/opt/local/bin/g++-mp-@GCC_VERSION_MAJOR@.@GCC_VERSION_MINOR@ -m64 $@

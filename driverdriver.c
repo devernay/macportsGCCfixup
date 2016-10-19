@@ -40,6 +40,7 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
    Pay the price for including darwin.h.  */
 typedef int tree;
 typedef int rtx;
+#undef GTY
 #define GTY(x) /* nothing */
 #define USED_FOR_TARGET 1
 /* Include darwin.h for SWITCH_TAKES_ARG and
@@ -111,19 +112,6 @@ int dash_m64_seen = 0;
 
 /* Support at the max 10 arch. at a time. This is historical limit.  */
 #define MAX_ARCHES 10
-static char pdn[32];
-static const char* get_pdn()
-{
-     const char* compiler_name = NULL;
-     memset( pdn, 0, 32 );
-#ifdef BUILD_C_COMPILER
-     compiler_name = "-gcc-mp-"; 
-#else
-     compiler_name = "-g++-mp-"; 
-#endif
-     snprintf( pdn, 32, "%s%s.%s", compiler_name, GCC_VERSION_MAJOR, GCC_VERSION_MINOR );
-     return pdn;
-}
 
 /* Name of user supplied architectures.  */
 const char *arches[MAX_ARCHES];
@@ -161,7 +149,7 @@ struct arch_config_guess_map
 
 struct arch_config_guess_map arch_config_map [] =
 {
-  {"i386", "i386"},
+  {"i386", "x86_64"}, //i386"}, changed: we have a single compiler for both archs
   {"ppc", "powerpc"},
   {"ppc64", "powerpc"},
   {"x86_64", "x86_64"},
@@ -337,14 +325,14 @@ get_driver_name (const char *arch_name)
   if (!config_name)
     fatal ("Unable to guess config name for arch %s", arch_name);
 
-  len = strlen (config_name) + strlen (get_pdn()) + prefix_len + 1;
+  len = strlen (config_name) + strlen (PDN) + prefix_len + 1;
   driver_name = (char *) malloc (sizeof (char) * len);
   driver_name[0] = '\0';
 
   if (driver_exec_prefix)
     strcpy (driver_name, driver_exec_prefix);
   strcat (driver_name, config_name);
-  strcat (driver_name, get_pdn());
+  strcat (driver_name, PDN);
 
   return driver_name;
 }
@@ -685,7 +673,7 @@ do_compile_separately (void)
   /* Total number of arguments in separate compiler invocation is :
      total number of original arguments - total no input files + one input
      file + "-o" + output file + arch specific options + NULL .  */
-  new_new_argv = (const char **) malloc ((new_argc - num_infiles + 5) * sizeof (const char *));
+  new_new_argv = (const char **) malloc ((new_argc - num_infiles + 5 + 1 /* added, to allow supplementary -m32 flag */) * sizeof (const char *));
   if (!new_new_argv)
     abort ();
 
@@ -804,20 +792,43 @@ add_arch_options (int index, const char **current_argv, int arch_index)
     current_argv[arch_index] = "-mcpu=970";
   else if (!strcmp (arches[index], "ppc64"))
     current_argv[arch_index] = "-m64";
+  else if (!strcmp (arches[index], "i386")) // added (force 32 bits)
+    current_argv[arch_index] = "-m32";      // added (force 32 bits)
   else if (!strcmp (arches[index], "i486"))
+  {
     current_argv[arch_index] = "-march=i486";
+    current_argv[arch_index+1] = "-m32"; ++count; // added (force 32 bits)
+  }
   else if (!strcmp (arches[index], "i586"))
+  {
     current_argv[arch_index] = "-march=i586";
+    current_argv[arch_index+1] = "-m32"; ++count; // added (force 32 bits)
+  }
   else if (!strcmp (arches[index], "i686"))
+  {
     current_argv[arch_index] = "-march=i686";
+    current_argv[arch_index+1] = "-m32"; ++count; // added (force 32 bits)
+  }
   else if (!strcmp (arches[index], "pentium"))
+  {
     current_argv[arch_index] = "-march=pentium";
+    current_argv[arch_index+1] = "-m32"; ++count; // added (force 32 bits)
+  }
   else if (!strcmp (arches[index], "pentium2"))
+  {
     current_argv[arch_index] = "-march=pentium2";
+    current_argv[arch_index+1] = "-m32"; ++count; // added (force 32 bits)
+  }
   else if (!strcmp (arches[index], "pentpro"))
+  {
     current_argv[arch_index] = "-march=pentiumpro";
+    current_argv[arch_index+1] = "-m32"; ++count; // added (force 32 bits)
+  }
   else if (!strcmp (arches[index], "pentIIm3"))
+  {
     current_argv[arch_index] = "-march=pentium2";
+    current_argv[arch_index+1] = "-m32"; ++count; // added (force 32 bits)
+  }
   else if (!strcmp (arches[index], "x86_64"))
     current_argv[arch_index] = "-m64";
   else if (!strcmp (arches[index], "arm"))
@@ -1460,6 +1471,16 @@ main (int argc, const char **argv)
 	  output_filename = argv[i+1];
 	  i++;
 	}
+      else if (!strcmp (argv[i], "-fconstant-cfstrings")) // added: gcc uses -mconstant-cfstrings
+	{
+	  new_argv[new_argc++] = "-mconstant-cfstrings";
+	  dash_dynamiclib_seen = 1;
+        }
+      else if (!strcmp (argv[i], "-fno-constant-cfstrings")) // added: gcc uses -mconstant-cfstrings
+	{
+	  new_argv[new_argc++] = "-mno-constant-cfstrings";
+	  dash_dynamiclib_seen = 1;
+        }
       else if ((! strcmp (argv[i], "-pass-exit-codes"))
 	       || (! strcmp (argv[i], "-print-search-dirs"))
 	       || (! strcmp (argv[i], "-print-libgcc-file-name"))
