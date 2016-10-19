@@ -46,11 +46,13 @@ execute_process (
   COMMAND         ${GCC} -dumpmachine
   OUTPUT_VARIABLE GCC_SYSTEM_NAME
 )
+string(STRIP ${GCC_SYSTEM_NAME} GCC_SYSTEM_NAME)
 
 execute_process (
   COMMAND         ${GXX} -dumpmachine
   OUTPUT_VARIABLE GXX_SYSTEM_NAME
 )
+string(STRIP ${GXX_SYSTEM_NAME} GXX_SYSTEM_NAME)
 
 get_filename_component(GCCNAME ${GCC} NAME)
 get_filename_component(GXXNAME ${GXX} NAME)
@@ -67,6 +69,8 @@ find_program ( GXX_FULL
 
 get_filename_component(GCC_FULL_NAME ${GCC_FULL} NAME)
 get_filename_component(GXX_FULL_NAME ${GXX_FULL} NAME)
+string(REPLACE "x86_64" "" GCC_FULL_NAME_NOARCH ${GCC_FULL_NAME})
+string(REPLACE "x86_64" "" GXX_FULL_NAME_NOARCH ${GXX_FULL_NAME})
 
 if( NOT GCC )
      MESSAGE( FATAL_ERROR
@@ -75,7 +79,7 @@ endif()
 
 if( NOT GCC_FULL )
      MESSAGE( FATAL_ERROR
-              "Unable to find the full gcc name." )
+              "Unable to find the full gcc ${GCC_SYSTEM_NAME}-${GCCNAME} in ${GCCDIR}." )
 endif()
 
 find_path( XCODE_PLUGIN_PATH GCC\ 4.2.xcplugin
@@ -92,11 +96,11 @@ ADD_EXECUTABLE( ${GXXNAME} driverdriver.c )
 
 SET_TARGET_PROPERTIES(  ${GCCNAME}
                         PROPERTIES
-                        COMPILE_FLAGS "-DPDN='\"${GCC_FULL_NAME}\"'" )
+                        COMPILE_FLAGS "-DPDN='\"${GCC_FULL_NAME_NOARCH}\"'" )
 
 SET_TARGET_PROPERTIES(  ${GXXNAME}
                         PROPERTIES
-                        COMPILE_FLAGS "-DPDN='\"${GXX_FULL_NAME}\"'" )
+                        COMPILE_FLAGS "-DPDN='\"${GXX_FULL_NAME_NOARCH}\"'" )
 
 find_path( DARWIN_H_INCLUDE_PATH darwin.h
            ${PORTS_PATH}/lib/gcc${GCC_VERSION_MAJOR}${GCC_VERSION_MINOR}/gcc/i386-apple-darwin${OSVERSION}/${GCC_VERSION_MAJOR}.${GCC_VERSION_MINOR}.${GCC_VERSION_MICRO}/plugin/include/config/i386/

@@ -149,7 +149,7 @@ struct arch_config_guess_map
 
 struct arch_config_guess_map arch_config_map [] =
 {
-  {"i386", "i386"},
+  {"i386", "x86_64"}, //i386"}, changed: we have a single compiler for both archs
   {"ppc", "powerpc"},
   {"ppc64", "powerpc"},
   {"x86_64", "x86_64"},
@@ -1471,6 +1471,16 @@ main (int argc, const char **argv)
 	  output_filename = argv[i+1];
 	  i++;
 	}
+      else if (!strcmp (argv[i], "-fconstant-cfstrings")) // added: gcc uses -mconstant-cfstrings
+	{
+	  new_argv[new_argc++] = "-mconstant-cfstrings";
+	  dash_dynamiclib_seen = 1;
+        }
+      else if (!strcmp (argv[i], "-fno-constant-cfstrings")) // added: gcc uses -mconstant-cfstrings
+	{
+	  new_argv[new_argc++] = "-mno-constant-cfstrings";
+	  dash_dynamiclib_seen = 1;
+        }
       else if ((! strcmp (argv[i], "-pass-exit-codes"))
 	       || (! strcmp (argv[i], "-print-search-dirs"))
 	       || (! strcmp (argv[i], "-print-libgcc-file-name"))
