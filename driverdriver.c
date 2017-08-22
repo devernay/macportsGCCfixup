@@ -153,6 +153,7 @@ struct arch_config_guess_map arch_config_map [] =
   {"ppc", "powerpc"},
   {"ppc64", "powerpc"},
   {"x86_64", "x86_64"},
+#ifdef CPU_TYPE_ARM
   /* Note: It's required that all supported ARM architectures be listed
    * here explicitly */
   {"arm", "arm"},
@@ -161,6 +162,7 @@ struct arch_config_guess_map arch_config_map [] =
   {"xscale", "arm"},
   {"armv6", "arm"},
   {"armv7", "arm"},
+#endif
   {NULL, NULL}
 };
 
@@ -258,10 +260,12 @@ get_arch_name (const char *name)
       else map++;
     }
     a_info = (NXArchInfo *) NXGetArchInfoFromName (name);
+#ifdef CPU_TYPE_ARM
     /* radr://7148788  emit diagnostic for ARM architectures not explicitly
      * handled by the driver. */
     if (a_info && a_info->cputype == CPU_TYPE_ARM)
       a_info = NULL;
+#endif
   } else {
     a_info = (NXArchInfo *) NXGetLocalArchInfo();
     if (a_info) {
@@ -831,6 +835,7 @@ add_arch_options (int index, const char **current_argv, int arch_index)
   }
   else if (!strcmp (arches[index], "x86_64"))
     current_argv[arch_index] = "-m64";
+#ifdef CPU_TYPE_ARM
   else if (!strcmp (arches[index], "arm"))
     current_argv[arch_index] = "-march=armv4t";
   else if (!strcmp (arches[index], "armv4t"))
@@ -843,6 +848,7 @@ add_arch_options (int index, const char **current_argv, int arch_index)
     current_argv[arch_index] = "-march=armv6k";
   else if (!strcmp (arches[index], "armv7"))
     current_argv[arch_index] = "-march=armv7a";
+#endif
   else
     count = 0;
 
