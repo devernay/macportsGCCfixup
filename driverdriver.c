@@ -1668,7 +1668,7 @@ main (int argc, const char **argv)
 
       /* If more than one input files are supplied but only one output filename
 	 is present then IMA will be used.  */
-      if (num_infiles > 1 && !compile_only_request)
+      if (num_infiles != 1 && !compile_only_request)
 	ima_is_used = 1;
 
       /* Linker wants to know this in case of multiple -arch.  */
