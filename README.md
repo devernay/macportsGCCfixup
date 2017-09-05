@@ -44,7 +44,13 @@ If required, older Mac OS X SDKs can be installed using [xcodelegacy](https://gi
     
     mkdir build-gcc6
     cd build-gcc6
-    cmake .. -DGCC_VERSION=6.2.0 -DIBERTY_LIB=/opt/local/lib/gcc48/libiberty.a
+    cmake .. -DGCC_VERSION=6.4.0 -DIBERTY_LIB=/opt/local/lib/gcc48/libiberty.a
     make
     sudo make install
+    cd ..
+
+    mkdir build-gcc7
+    cd build-gcc7
+    cmake .. -DGCC_VERSION=7.2.0 -DIBERTY_LIB=/opt/local/lib/gcc48/libiberty.a
+    make
     cd ..
